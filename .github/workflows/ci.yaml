@@ -5,9 +5,25 @@ on:
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:
 
 jobs:
+  lint:
+    name: SwiftLint (macOS)
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Run SwiftLint
+        run: swiftlint
+
   build-and-test:
+    name: Build & Test (Ubuntu + Swift 6.1)
     runs-on: ubuntu-22.04
 
     env:
@@ -44,19 +60,6 @@ jobs:
 
       - name: Check Swift version
         run: swift --version
-
-      - name: Install SwiftLint
-        run: |
-          sudo apt-get install -y swiftlint || echo "SwiftLint not found for Linux — skipping"
-          which swiftlint || echo "SwiftLint not installed, skipping lint step"
-
-      - name: Run SwiftLint (if installed)
-        run: |
-          if command -v swiftlint &> /dev/null; then
-            swiftlint
-          else
-            echo "SwiftLint not installed, skipping."
-          fi
 
       - name: Build in release configuration
         run: swift build -c release
