@@ -1,5 +1,4 @@
 import Foundation
-
 import Logging
 
 private let logger = Logger(label: "diss")
@@ -51,7 +50,7 @@ internal class DissContainer: @unchecked Sendable {
     logger.debug("DissContainer destroyed")
   }
 }
-internal func DissReset() {
+internal func dissReset() {
   DissContainer.instance.reset()
 }
 internal func show() {

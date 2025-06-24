@@ -8,13 +8,13 @@ public class DissGet<T> {
   }
   public init() {}
 }
-public func DissSetSingleton<T>(initializer: () -> T) throws {
+public func dissSetSingleton<T>(initializer: () -> T) throws {
   let object = initializer()
   guard Mirror(reflecting: object).displayStyle == .class else {
     throw DissError.structSingleton
   }
   try DissContainer.instance.addSingleton(object: initializer())
 }
-public func DissSetBind<T>(type: T.Type, initializer: () -> T) throws {
+public func dissSetBind<T>(type: T.Type, initializer: () -> T) throws {
   try DissContainer.instance.addBind(type: T.self, object: initializer())
 }

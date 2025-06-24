@@ -25,6 +25,6 @@ let package: Package = Package(
     .testTarget(
       name: "DissTests",
       dependencies: ["Diss"]
-    ),
+    )
   ]
 )
