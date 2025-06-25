@@ -1,7 +1,5 @@
 import Foundation
-
 import Logging
-
 import Testing
 
 @testable import Diss
@@ -10,7 +8,7 @@ import Testing
 
   @Test func testDissBindSuccess() {
     do {
-      try dissSetBind(type: Service.self) { ServiceImpl() }
+      try dissBind(type: Service.self, policy: .singleton) { ServiceImpl() }
     } catch {
       print(error)
     }
@@ -24,15 +22,15 @@ import Testing
     #expect(
       throws: DissError.multipleSet(type: "UseCase"),
       performing: {
-        try dissSetBind(type: UseCase.self) { UseCase1() }
-        try dissSetBind(type: UseCase.self) { UseCase2() }
+        try dissBind(type: UseCase.self, policy: .singleton, ) { UseCase1() }
+        try dissBind(type: UseCase.self, policy: .singleton) { UseCase2() }
       }
     )
   }
 
-  @Test func testSingletonSuccess() {
+  @Test func testSetSingletonSuccess() {
     do {
-      try dissSetSingleton { Converter.init(number: 2.12345) }
+      try dissSet(policy: .singleton) { Converter.init(number: 2.12345) }
     } catch {
       print(error)
     }
@@ -42,10 +40,10 @@ import Testing
     #expect(converter?.convert() == 2.123)
   }
 
-  @Test func testSingletonFailure() {
+  @Test func testSetSingletonFailure() {
     #expect(
       throws: DissError.structSingleton,
-      performing: { try dissSetSingleton { BadSingleton() } }
+      performing: { try dissSet(policy: .singleton) { BadSingleton() } }
     )
   }
 
@@ -54,15 +52,18 @@ import Testing
   }
 
 }
+
 class ServiceImpl: Service {
   var number: Int
   init() {
     number = 1
   }
 }
+
 protocol Service {
   var number: Int { get }
 }
+
 class Converter {
   var number: Double
 
@@ -74,7 +75,8 @@ class Converter {
     return Double(round(1000 * number) / 1000)
   }
 }
+
 struct BadSingleton {}
 protocol UseCase {}
-struct UseCase1: UseCase {}
-struct UseCase2: UseCase {}
+class UseCase1: UseCase {}
+class UseCase2: UseCase {}
