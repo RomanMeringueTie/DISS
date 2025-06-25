@@ -47,6 +47,34 @@ import Testing
     )
   }
 
+  @Test func testSetScopeSuccess() {
+    do {
+      try dissSet(policy: .scope) { ScopeClass(number: 1) }
+    } catch {
+      print(error)
+    }
+    @DissGet
+    var scopeObject1: ScopeClass?
+    scopeObject1?.number = 2
+    @DissGet
+    var scopeObject2: ScopeClass?
+    scopeObject2?.number = 3
+    #expect(scopeObject1?.number == 2)
+    #expect(scopeObject2?.number == 3)
+  }
+
+  @Test func testSetScopeFailure() {
+
+    #expect(
+      throws: DissError.multipleSet(type: "ScopeClass"),
+      performing: { 
+        try dissSet(policy: .scope) { ScopeClass(number: 1) }
+        try dissSet(policy: .singleton) { ScopeClass(number: 1) }
+      }
+    )
+
+  }
+
   deinit {
     dissReset()
   }
@@ -80,3 +108,10 @@ struct BadSingleton {}
 protocol UseCase {}
 class UseCase1: UseCase {}
 class UseCase2: UseCase {}
+
+class ScopeClass {
+  var number: Int
+  init(number: Int) {
+    self.number = number
+  }
+}

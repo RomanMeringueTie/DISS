@@ -5,32 +5,52 @@ private let logger = Logger(label: "diss")
 
 internal class DissContainer: @unchecked Sendable {
   internal static let instance = DissContainer()
-  private var singletons: [ObjectIdentifier: Any] = [ObjectIdentifier: Any]()
+  private var instances: [ObjectIdentifier: Any] = [ObjectIdentifier: Any]()
+  private var scopes: [ObjectIdentifier: () -> Any] = [ObjectIdentifier: () -> Any]()
 
   private init() {}
 
-  internal func addSingleton<T>(type: T.Type, object: T) throws {
+  internal func addInstance<T>(type: T.Type, object: T) throws {
     let key = ObjectIdentifier(type)
-    let findedObject = singletons[key]
-    guard findedObject == nil else {
+    guard instances[key] == nil else {
       throw DissError.multipleSet(type: "\(T.self)")
     }
-    singletons[key] = object
+    instances[key] = object
+  }
+
+  internal func addScope<T>(type: T.Type, initializer: @escaping () -> T) throws {
+    let key = ObjectIdentifier(type)
+    guard instances[key] == nil && scopes[key] == nil else {
+      throw DissError.multipleSet(type: "\(T.self)")
+    }
+    scopes[key] = initializer
   }
 
   internal func getByType<T>(type: T.Type) -> T? {
-    logger.debug("TYPE in getByType: '\(ObjectIdentifier(type))'")
-    let findedObject = singletons[ObjectIdentifier(T.self)] as? T
-    logger.debug("Finded in singletons: \(String(describing: findedObject))")
+    let key = ObjectIdentifier(type)
+    logger.debug("TYPE in getByType: '\(key)'")
+    var findedObject = instances[key] as? T
+    logger.debug("Finded in instances: \(String(describing: findedObject))")
+    // TODO: Refactor this section of code
+    if findedObject == nil {
+      let initializer = scopes[key]
+      if (initializer != nil) {
+        findedObject = initializer?() as? T
+      }
+      if (findedObject != nil) { 
+        logger.debug("Scope object created: \(String(describing:findedObject!))")
+      }
+    }
     return findedObject
   }
 
   internal func reset() {
-    singletons.removeAll()
+    instances.removeAll()
   }
 
   internal func show() {
-    logger.debug("singletons: \(singletons)")
+    print("instances: \(instances)")
+    print("scopes: \(scopes)")
   }
 
   deinit {

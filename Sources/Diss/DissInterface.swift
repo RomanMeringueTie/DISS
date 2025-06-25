@@ -9,22 +9,22 @@ public class DissGet<T> {
   public init() {}
 }
 
-public func dissSet<T>(policy: DissPolicy, initializer: () -> T) throws {
+public func dissSet<T>(policy: DissPolicy, initializer: @escaping () -> T) throws {
   try dissBind(type: T.self, policy: policy, initializer: initializer)
 }
 
-public func dissBind<T>(type: T.Type, policy: DissPolicy, initializer: () -> T) throws {
-  let object = initializer()
+public func dissBind<T>(type: T.Type, policy: DissPolicy, initializer: @escaping () -> T) throws {
   switch policy {
 
   case .singleton:
+    let object = initializer()
     guard Mirror(reflecting: object).displayStyle == .class else {
       throw DissError.structSingleton
     }
-    try DissContainer.instance.addSingleton(type: T.self, object: initializer())
+    try DissContainer.instance.addInstance(type: T.self, object: object)
 
   case .scope:
-    throw DissError.notFound
+    try DissContainer.instance.addScope(type: T.self, initializer: initializer)
 
   }
 
