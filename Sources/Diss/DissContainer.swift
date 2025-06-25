@@ -3,10 +3,11 @@ import Logging
 
 private let logger = Logger(label: "diss")
 
-internal class DissContainer: @unchecked Sendable {
+internal class DissContainer {
   internal static let instance = DissContainer()
   private var instances: [ObjectIdentifier: Any] = [ObjectIdentifier: Any]()
   private var scopes: [ObjectIdentifier: () -> Any] = [ObjectIdentifier: () -> Any]()
+  private var factories: [ObjectIdentifier: () -> Any] = [ObjectIdentifier: () -> Any]()
 
   private init() {}
 
@@ -26,19 +27,36 @@ internal class DissContainer: @unchecked Sendable {
     scopes[key] = initializer
   }
 
+  internal func addFactory<T>(type: T.Type, initializer: @escaping () -> T) throws {
+    let key = ObjectIdentifier(type)
+    guard instances[key] == nil && scopes[key] == nil else {
+      throw DissError.multipleSet(type: "\(T.self)")
+    }
+    factories[key] = initializer
+  }
+
   internal func getByType<T>(type: T.Type) -> T? {
     let key = ObjectIdentifier(type)
     logger.debug("TYPE in getByType: '\(key)'")
     var findedObject = instances[key] as? T
     logger.debug("Finded in instances: \(String(describing: findedObject))")
-    
-    if findedObject == nil {
-      let initializer = scopes[key]
-      findedObject = initializer?() as? T
-      if findedObject != nil {
-        logger.debug("Scope object created: \(String(describing: findedObject!))")
-      }
+    if findedObject != nil {
+      return findedObject
     }
+
+    findedObject = scopes[key]?() as? T
+    if findedObject != nil {
+      logger.debug("Scope object created: \(String(describing: findedObject!))")
+      return findedObject
+    }
+
+    findedObject = factories[key]?() as? T
+    if findedObject != nil {
+      logger.debug("Factory object created: \(String(describing: findedObject!))")
+      instances[key] = findedObject
+      return findedObject
+    }
+
     return findedObject
   }
 
@@ -55,6 +73,8 @@ internal class DissContainer: @unchecked Sendable {
     logger.debug("DissContainer destroyed")
   }
 }
+
+extension DissContainer: @unchecked Sendable {}
 
 internal func dissReset() {
   DissContainer.instance.reset()

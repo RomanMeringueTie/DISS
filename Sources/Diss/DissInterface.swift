@@ -26,10 +26,13 @@ public func dissBind<T>(type: T.Type, policy: DissPolicy, initializer: @escaping
   case .scope:
     try DissContainer.instance.addScope(type: T.self, initializer: initializer)
 
+  case .factory:
+    try DissContainer.instance.addFactory(type: T.self, initializer: initializer)
+
   }
 
 }
 
 public enum DissPolicy: Equatable {
-  case singleton, scope
+  case singleton, scope, factory
 }

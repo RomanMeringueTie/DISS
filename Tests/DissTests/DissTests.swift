@@ -75,6 +75,21 @@ import Testing
 
   }
 
+  @Test func testSetFactorySuccess() {
+    do {
+      try dissSet(policy: .factory) { ServiceImpl() }
+    } catch {
+      print(error)
+    }
+
+    @DissGet
+    var service1: ServiceImpl?
+    service1?.number = 2
+    @DissGet
+    var service2: ServiceImpl?
+    #expect(service2?.number == 2)
+  }
+
   deinit {
     dissReset()
   }
