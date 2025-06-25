@@ -31,14 +31,12 @@ internal class DissContainer: @unchecked Sendable {
     logger.debug("TYPE in getByType: '\(key)'")
     var findedObject = instances[key] as? T
     logger.debug("Finded in instances: \(String(describing: findedObject))")
-    // TODO: Refactor this section of code
+    
     if findedObject == nil {
       let initializer = scopes[key]
-      if (initializer != nil) {
-        findedObject = initializer?() as? T
-      }
-      if (findedObject != nil) { 
-        logger.debug("Scope object created: \(String(describing:findedObject!))")
+      findedObject = initializer?() as? T
+      if findedObject != nil {
+        logger.debug("Scope object created: \(String(describing: findedObject!))")
       }
     }
     return findedObject

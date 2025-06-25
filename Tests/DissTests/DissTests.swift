@@ -67,7 +67,7 @@ import Testing
 
     #expect(
       throws: DissError.multipleSet(type: "ScopeClass"),
-      performing: { 
+      performing: {
         try dissSet(policy: .scope) { ScopeClass(number: 1) }
         try dissSet(policy: .singleton) { ScopeClass(number: 1) }
       }
