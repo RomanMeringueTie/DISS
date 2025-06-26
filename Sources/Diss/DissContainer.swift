@@ -6,7 +6,7 @@ private let logger = Logger(label: "diss")
 internal class DissContainer {
   internal static let instance = DissContainer()
   private var instances: [ObjectIdentifier: Any] = [ObjectIdentifier: Any]()
-  private var scopes: [ObjectIdentifier: () -> Any] = [ObjectIdentifier: () -> Any]()
+  private var uniques: [ObjectIdentifier: () -> Any] = [ObjectIdentifier: () -> Any]()
   private var factories: [ObjectIdentifier: () -> Any] = [ObjectIdentifier: () -> Any]()
 
   private init() {}
@@ -19,17 +19,17 @@ internal class DissContainer {
     instances[key] = object
   }
 
-  internal func addScope<T>(type: T.Type, initializer: @escaping () -> T) throws {
+  internal func addUnique<T>(type: T.Type, initializer: @escaping () -> T) throws {
     let key = ObjectIdentifier(type)
-    guard instances[key] == nil && scopes[key] == nil else {
+    guard instances[key] == nil && uniques[key] == nil else {
       throw DissError.multipleSet(type: "\(T.self)")
     }
-    scopes[key] = initializer
+    uniques[key] = initializer
   }
 
   internal func addFactory<T>(type: T.Type, initializer: @escaping () -> T) throws {
     let key = ObjectIdentifier(type)
-    guard instances[key] == nil && scopes[key] == nil else {
+    guard instances[key] == nil && uniques[key] == nil else {
       throw DissError.multipleSet(type: "\(T.self)")
     }
     factories[key] = initializer
@@ -44,7 +44,7 @@ internal class DissContainer {
       return findedObject
     }
 
-    findedObject = scopes[key]?() as? T
+    findedObject = uniques[key]?() as? T
     if findedObject != nil {
       logger.debug("Scope object created: \(String(describing: findedObject!))")
       return findedObject
@@ -66,7 +66,7 @@ internal class DissContainer {
 
   internal func show() {
     print("instances: \(instances)")
-    print("scopes: \(scopes)")
+    print("uniques: \(uniques)")
   }
 
   deinit {

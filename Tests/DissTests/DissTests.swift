@@ -49,27 +49,27 @@ import Testing
 
   @Test func testSetScopeSuccess() {
     do {
-      try dissSet(policy: .scope) { ScopeClass(number: 1) }
+      try dissSet(policy: .unique) { UniqueClass(number: 1) }
     } catch {
       print(error)
     }
     @DissGet
-    var scopeObject1: ScopeClass?
-    scopeObject1?.number = 2
+    var uniqueObject1: UniqueClass?
+    uniqueObject1?.number = 2
     @DissGet
-    var scopeObject2: ScopeClass?
-    scopeObject2?.number = 3
-    #expect(scopeObject1?.number == 2)
-    #expect(scopeObject2?.number == 3)
+    var uniqueObject2: UniqueClass?
+    uniqueObject2?.number = 3
+    #expect(uniqueObject1?.number == 2)
+    #expect(uniqueObject2?.number == 3)
   }
 
   @Test func testSetScopeFailure() {
 
     #expect(
-      throws: DissError.multipleSet(type: "ScopeClass"),
+      throws: DissError.multipleSet(type: "UniqueClass"),
       performing: {
-        try dissSet(policy: .scope) { ScopeClass(number: 1) }
-        try dissSet(policy: .singleton) { ScopeClass(number: 1) }
+        try dissSet(policy: .unique) { UniqueClass(number: 1) }
+        try dissSet(policy: .singleton) { UniqueClass(number: 1) }
       }
     )
 
@@ -124,7 +124,7 @@ protocol UseCase {}
 class UseCase1: UseCase {}
 class UseCase2: UseCase {}
 
-class ScopeClass {
+class UniqueClass {
   var number: Int
   init(number: Int) {
     self.number = number
