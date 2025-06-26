@@ -38,25 +38,30 @@ internal class DissContainer {
   internal func getByType<T>(type: T.Type) -> T? {
     let key = ObjectIdentifier(type)
     logger.debug("TYPE in getByType: '\(key)'")
-    var findedObject = instances[key] as? T
-    logger.debug("Finded in instances: \(String(describing: findedObject))")
-    if findedObject != nil {
-      return findedObject
-    }
+    let findedObject: T? = getSingleton(key) ?? getFactory(key) ?? getUnique(key)
+    return findedObject
+  }
 
-    findedObject = uniques[key]?() as? T
+  private func getSingleton<T>(_ key: ObjectIdentifier) -> T? {
+    let findedObject = instances[key] as? T
+    logger.debug("Finded in instances: \(String(describing: findedObject))")
+    return findedObject
+  }
+
+  private func getUnique<T>(_ key: ObjectIdentifier) -> T? {
+    let findedObject = uniques[key]?() as? T
     if findedObject != nil {
       logger.debug("Scope object created: \(String(describing: findedObject!))")
-      return findedObject
     }
+    return findedObject
+  }
 
-    findedObject = factories[key]?() as? T
+  private func getFactory<T>(_ key: ObjectIdentifier) -> T? {
+    let findedObject = factories[key]?() as? T
     if findedObject != nil {
       logger.debug("Factory object created: \(String(describing: findedObject!))")
       instances[key] = findedObject
-      return findedObject
     }
-
     return findedObject
   }
 
