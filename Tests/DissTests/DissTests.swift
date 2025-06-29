@@ -129,6 +129,21 @@ import Testing
 
   }
 
+  @Test func testSingleWrapperSuccess() {
+    do {
+      try dissSet(policy: .singleton) { DissSingle(BadSingleton()) }
+    } catch {
+      print(error)
+    }
+
+    @DissGet
+    var singleton1: DissSingle<BadSingleton>?
+    @DissGet
+    var singleton2: DissSingle<BadSingleton>?
+    singleton1?.object.number = 10
+    #expect(singleton2?.object.number == 10)
+  }
+
   deinit {
     dissReset()
   }

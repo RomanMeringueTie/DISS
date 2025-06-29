@@ -75,3 +75,10 @@ public func dissCast<T>(_ value: Any) throws -> T {
   }
   return result!
 }
+
+public class DissSingle<T> {
+  public var object: T
+  init(_ object: T) {
+    self.object = object
+  }
+}

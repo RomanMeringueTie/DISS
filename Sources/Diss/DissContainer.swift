@@ -94,11 +94,6 @@ internal class DissContainer {
     assists.removeAll()
   }
 
-  internal func show() {
-    print("instances: \(instances)")
-    print("uniques: \(uniques)")
-  }
-
   deinit {
     logger.debug("DissContainer destroyed")
   }
@@ -110,20 +105,9 @@ internal func dissReset() {
   DissContainer.instance.reset()
 }
 
-internal func show() {
-  DissContainer.instance.show()
-}
-
 internal enum DissError: Error, Equatable {
   case structSingleton
   case multipleSet(type: String)
   case assistedNotUnique
   case unexpectedType(expected: String, actual: String)
-}
-
-internal class SingletonWrapper<T> {
-  private let object: T?
-  init(object: T?) {
-    self.object = object
-  }
 }
