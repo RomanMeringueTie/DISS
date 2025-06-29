@@ -47,7 +47,7 @@ import Testing
     )
   }
 
-  @Test func testSetScopeSuccess() {
+  @Test func testSetUniqueSuccess() {
     do {
       try dissSet(policy: .unique) { UniqueClass(number: 1) }
     } catch {
@@ -63,9 +63,8 @@ import Testing
     #expect(uniqueObject2?.number == 3)
   }
 
-  @Test func testSetScopeFailure() {
-
-    #expect(
+  @Test func testSetUniqueFailure() {
+  #expect(
       throws: DissError.multipleSet(type: "UniqueClass"),
       performing: {
         try dissSet(policy: .unique) { UniqueClass(number: 1) }
@@ -88,6 +87,47 @@ import Testing
     @DissGet
     var service2: ServiceImpl?
     #expect(service2?.number == 2)
+  }
+
+  @Test func testAssistSuccess() {
+    do {
+      try dissAssist(policy: .unique) {
+        (args: [Any]) in
+          ThreeArgs(first: try dissCast(args[0]), second: try dissCast(args[1]), third: try dissCast(args[2])
+        )
+      }
+      try dissAssist(policy: .unique) { (args: [Any]) in Converter(number: try dissCast(args[0])) }
+    } catch {
+      print(error)
+    }
+
+    @DissGetAssisted(arguments: [0.3339])
+    var converter: Converter?
+    #expect(converter?.convert() == 0.334)
+
+    @DissGetAssisted(arguments: [1, 2.1, "Hello"])
+    var threeArgs: ThreeArgs?
+    #expect(threeArgs?.first == 1)
+    #expect(threeArgs?.second == 2.1)
+    #expect(threeArgs?.third == "Hello")
+
+  }
+
+  @Test func testAssistFailure() {
+  do {
+    try dissAssist(policy: .unique) { (args: [Any]) in Converter(number: try dissCast(args[0])) }
+  } catch {
+    print(error)
+  }
+
+  @DissGetAssisted(arguments: ["String"])
+  var converter: Converter?
+
+  #expect(converter == nil)
+  #expect(throws: DissError.assistedNotUnique) {
+    try dissAssist(policy: .singleton) { (args: [Any]) in Converter(number: try dissCast(args[0])) }
+  }
+
   }
 
   deinit {
@@ -119,7 +159,7 @@ class Converter {
   }
 }
 
-struct BadSingleton {}
+struct BadSingleton { var number = 3 }
 protocol UseCase {}
 class UseCase1: UseCase {}
 class UseCase2: UseCase {}
@@ -129,4 +169,10 @@ class UniqueClass {
   init(number: Int) {
     self.number = number
   }
+}
+
+struct ThreeArgs {
+  let first: Int
+  let second: Double
+  let third: String
 }

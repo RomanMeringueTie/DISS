@@ -8,12 +8,13 @@ internal class DissContainer {
   private var instances: [ObjectIdentifier: Any] = [ObjectIdentifier: Any]()
   private var uniques: [ObjectIdentifier: () -> Any] = [ObjectIdentifier: () -> Any]()
   private var factories: [ObjectIdentifier: () -> Any] = [ObjectIdentifier: () -> Any]()
+  internal var assists: [ObjectIdentifier: ([Any]) throws -> Any] = [ObjectIdentifier: ([Any]) throws -> Any]()
 
   private init() {}
 
   internal func addInstance<T>(type: T.Type, object: T) throws {
     let key = ObjectIdentifier(type)
-    guard instances[key] == nil else {
+    guard getByType(T.self) == nil else {
       throw DissError.multipleSet(type: "\(T.self)")
     }
     instances[key] = object
@@ -21,7 +22,7 @@ internal class DissContainer {
 
   internal func addUnique<T>(type: T.Type, initializer: @escaping () -> T) throws {
     let key = ObjectIdentifier(type)
-    guard instances[key] == nil && uniques[key] == nil else {
+    guard getByType(T.self) == nil else {
       throw DissError.multipleSet(type: "\(T.self)")
     }
     uniques[key] = initializer
@@ -29,16 +30,38 @@ internal class DissContainer {
 
   internal func addFactory<T>(type: T.Type, initializer: @escaping () -> T) throws {
     let key = ObjectIdentifier(type)
-    guard instances[key] == nil && uniques[key] == nil else {
+    guard getByType(T.self) == nil else {
       throw DissError.multipleSet(type: "\(T.self)")
     }
     factories[key] = initializer
   }
 
-  internal func getByType<T>(type: T.Type) -> T? {
+  internal func addAssist<T>(type: T.Type, initializer: @escaping (Any) -> T) throws {
+    let key = ObjectIdentifier(type)
+    guard getByType(T.self) == nil else {
+      throw DissError.multipleSet(type: "\(type)")
+    }
+    assists[key] = initializer
+  }
+
+  internal func getByType<T>(_ type: T.Type) -> T? {
     let key = ObjectIdentifier(type)
     logger.debug("TYPE in getByType: '\(key)'")
     let findedObject: T? = getSingleton(key) ?? getFactory(key) ?? getUnique(key)
+    return findedObject
+  }
+
+  internal func getAssist<T>(_ type: T.Type, _ arguments: [Any]) -> T? {
+    let key = ObjectIdentifier(type)
+    let findedObject: T?
+    do {
+     try findedObject = assists[key]?(arguments) as? T
+    }
+    catch {
+      logger.error("Typecast error: \(error)")
+      findedObject = nil
+    }
+    logger.debug("Finded in assists: \(String(describing: findedObject))")
     return findedObject
   }
 
@@ -67,6 +90,9 @@ internal class DissContainer {
 
   internal func reset() {
     instances.removeAll()
+    uniques.removeAll()
+    factories.removeAll()
+    assists.removeAll()
   }
 
   internal func show() {
@@ -90,9 +116,10 @@ internal func show() {
 }
 
 internal enum DissError: Error, Equatable {
-  case notFound
   case structSingleton
   case multipleSet(type: String)
+  case assistedNotUnique
+  case unexpectedType(expected: String, actual: String)
 }
 
 internal class SingletonWrapper<T> {

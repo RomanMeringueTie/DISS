@@ -1,12 +1,28 @@
 @propertyWrapper
 public class DissGet<T> {
-  private var backingValue: T? = DissContainer.instance.getByType(type: T.self)
+  private var backingValue: T? = DissContainer.instance.getByType(T.self)
 
   public var wrappedValue: T? {
     get { backingValue }
     set { backingValue = newValue }
   }
   public init() {}
+}
+
+@propertyWrapper
+public class DissGetAssisted<T> {
+  private var backingValue: T?
+  private let arguments: [Any]
+
+  public var wrappedValue: T? {
+    get { backingValue }
+    set { backingValue = newValue }
+  }
+
+  public init(arguments: [Any]) {
+    self.arguments = arguments
+    self.backingValue = DissContainer.instance.getAssist(T.self, arguments)
+  }
 }
 
 public func dissSet<T>(policy: DissPolicy, initializer: @escaping () -> T) throws {
@@ -33,6 +49,28 @@ public func dissBind<T>(type: T.Type, policy: DissPolicy, initializer: @escaping
 
 }
 
+public func dissAssist<R>(policy: DissPolicy, initializer: @escaping ([Any]) throws -> R) throws {
+  switch policy {
+
+  case .unique:
+    let key = ObjectIdentifier(R.self)
+    guard DissContainer.instance.assists[key] == nil else {
+      throw DissError.multipleSet(type: "\(R.self)")
+    }
+    DissContainer.instance.assists[key] = initializer
+
+  default:
+    throw DissError.assistedNotUnique
+  }
+}
+
 public enum DissPolicy: Equatable {
   case singleton, unique, factory
+}
+
+public func dissCast<T>(_ value: Any) throws -> T {
+  guard value as? T != nil else {
+    throw DissError.unexpectedType(expected: "\(T.self)", actual: "\(type(of: value))")
+  }
+  return value as! T
 }
