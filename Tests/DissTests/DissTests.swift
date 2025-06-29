@@ -91,8 +91,7 @@ import Testing
 
   @Test func testAssistSuccess() {
     do {
-      try dissAssist(policy: .unique) {
-        (args: [Any]) in
+      try dissAssist(policy: .unique) { (args: [Any]) in
           ThreeArgs(first: try dissCast(args[0]), second: try dissCast(args[1]), third: try dissCast(args[2])
         )
       }

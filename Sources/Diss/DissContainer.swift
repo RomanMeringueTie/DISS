@@ -56,8 +56,7 @@ internal class DissContainer {
     let findedObject: T?
     do {
      try findedObject = assists[key]?(arguments) as? T
-    }
-    catch {
+    } catch {
       logger.error("Typecast error: \(error)")
       findedObject = nil
     }

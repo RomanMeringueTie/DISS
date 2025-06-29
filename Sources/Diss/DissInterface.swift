@@ -69,8 +69,9 @@ public enum DissPolicy: Equatable {
 }
 
 public func dissCast<T>(_ value: Any) throws -> T {
-  guard value as? T != nil else {
+  let result: T? = value as? T
+  guard result != nil else {
     throw DissError.unexpectedType(expected: "\(T.self)", actual: "\(type(of: value))")
   }
-  return value as! T
+  return result!
 }
